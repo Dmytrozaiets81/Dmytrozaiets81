@@ -1,4 +1,4 @@
-package example
+package main
 
 import (
 	"fmt"
@@ -11,4 +11,5 @@ func main() {
 	fmt.Println(elements)
 	fmt.Println(common.Bv2av("BV1XC4y1h78J"))
 	fmt.Println(common.Av2bv("795898202"))
+	fmt.Println(common.DmMidHash2Uid("a9ce8ef5"))
 }

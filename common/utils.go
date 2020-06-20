@@ -3,6 +3,8 @@ package common
 import (
 	"fmt"
 	"github/wnstar/bili-utils/api/webInterface"
+	"hash/crc32"
+	"strconv"
 )
 
 func Bv2av(bv string) string {
@@ -27,4 +29,14 @@ func Av2bv(av string) string {
 	} else {
 		return ""
 	}
+}
+
+func DmMidHash2Uid(midHash string) int64 {
+	hashid := ""
+	i := int64(0)
+	for ; hashid != midHash; i++ {
+		s := crc32.ChecksumIEEE([]byte(strconv.FormatInt(i, 10)))
+		hashid = strconv.FormatInt(int64(s), 16)
+	}
+	return i
 }

@@ -4,9 +4,14 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"github.com/wnstar/gorequests"
+	"github/wnstar/bili-utils/common"
 )
 
 //go:generate protoc --go_out=./ bilibili.proto
+
+func (d DanmakuElem) Uid() int64 {
+	return common.DmMidHash2Uid(d.MidHash)
+}
 
 func GetDm(cid string) []*DanmakuElem {
 	result := make([]*DanmakuElem, 0)
