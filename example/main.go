@@ -2,14 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github/wnstar/bili-utils/api/dm"
-	"github/wnstar/bili-utils/common"
+	"github.com/wnstar/bili-utils/core"
+	"github.com/wnstar/bili-utils/tools"
 )
 
 func main() {
-	elements := dm.GetDm("200680805")
+	bilibili := core.NewBilibili()
+	utils := tools.Tools{bilibili}
+	elements, _ := bilibili.Dm.SegSo("200680805")
 	fmt.Println(elements)
-	fmt.Println(common.Bv2av("BV1XC4y1h78J"))
-	fmt.Println(common.Av2bv("795898202"))
-	fmt.Println(common.DmMidHash2Uid("a9ce8ef5"))
+	fmt.Println(bilibili.Relation.Followers("1110510",1))
+	fmt.Println(utils.Bv2av("BV1XC4y1h78J"))
+	fmt.Println(utils.Av2bv("795898202"))
+	fmt.Println(utils.DmMidHash2Uid("a9ce8ef5"))
 }

@@ -1,14 +1,18 @@
-package common
+package tools
 
 import (
 	"fmt"
-	"github/wnstar/bili-utils/api/webInterface"
+	"github.com/wnstar/bili-utils/core"
 	"hash/crc32"
 	"strconv"
 )
 
-func Bv2av(bv string) string {
-	resp, err := webInterface.NewViewFromId(bv)
+type Tools struct {
+	Bilibili *core.Bilibili
+}
+
+func (t Tools) Bv2av(bv string) string {
+	resp, err := t.Bilibili.WebInterface.View(bv)
 	if err != nil {
 		return ""
 	}
@@ -19,8 +23,8 @@ func Bv2av(bv string) string {
 	}
 }
 
-func Av2bv(av string) string {
-	resp, err := webInterface.NewViewFromId(av)
+func (t Tools) Av2bv(av string) string {
+	resp, err := t.Bilibili.WebInterface.View(av)
 	if err != nil {
 		return ""
 	}
@@ -31,7 +35,7 @@ func Av2bv(av string) string {
 	}
 }
 
-func DmMidHash2Uid(midHash string) int64 {
+func (t Tools) DmMidHash2Uid(midHash string) int64 {
 	hashid := ""
 	i := int64(0)
 	for ; hashid != midHash; i++ {
