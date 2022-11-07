@@ -3,98 +3,20 @@ package webInterface
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/wnstar/bili-utils/request"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
+	"github.com/wnstar/bili-utils/api/x/webType"
 )
 
 type WebInterface struct {
+	Req *resty.Client
 }
 
-type ViewResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	TTL     int    `json:"ttl"`
-	Data    struct {
-		Bvid      string `json:"bvid"`      //视频bvid
-		Aid       int    `json:"aid"`       //视频avid
-		Videos    int    `json:"videos"`    //分p数
-		Tid       int    `json:"tid"`       //分区id
-		Tname     string `json:"tname"`     //子分区
-		Copyright int    `json:"copyright"` //是否自制 1自制
-		Pic       string `json:"pic"`       //封面
-		Title     string `json:"title"`     //标题
-		Pubdate   int    `json:"pubdate"`   //上传时间戳
-		Ctime     int    `json:"ctime"`     //通过审核时间
-		Desc      string `json:"desc"`      // 描述
-		State     int    `json:"state"`
-		Attribute int    `json:"attribute"`
-		Duration  int    `json:"duration"` //时长（秒
-		Rights    struct {
-			Bp            int `json:"bp"`
-			Elec          int `json:"elec"`
-			Download      int `json:"download"` //是否允许下载
-			Movie         int `json:"movie"`
-			Pay           int `json:"pay"`
-			Hd5           int `json:"hd5"`
-			NoReprint     int `json:"no_reprint"`
-			Autoplay      int `json:"autoplay"`
-			UgcPay        int `json:"ugc_pay"`
-			IsCooperation int `json:"is_cooperation"`
-			UgcPayPreview int `json:"ugc_pay_preview"`
-			NoBackground  int `json:"no_background"`
-			CleanMode     int `json:"clean_mode"`
-		} `json:"rights"`
-		Owner struct { //发布者信息
-			Mid  int    `json:"mid"`
-			Name string `json:"name"`
-			Face string `json:"face"`
-		} `json:"owner"`
-		Stat struct { //视频一些信息
-			Aid        int    `json:"aid"`
-			View       int    `json:"view"`
-			Danmaku    int    `json:"danmaku"`
-			Reply      int    `json:"reply"`
-			Favorite   int    `json:"favorite"`
-			Coin       int    `json:"coin"`
-			Share      int    `json:"share"`
-			NowRank    int    `json:"now_rank"`
-			HisRank    int    `json:"his_rank"`
-			Like       int    `json:"like"`
-			Dislike    int    `json:"dislike"`
-			Evaluation string `json:"evaluation"`
-		} `json:"stat"`
-		Dynamic   string `json:"dynamic"`
-		Cid       int    `json:"cid"`
-		Dimension struct {
-			Width  int `json:"width"`
-			Height int `json:"height"`
-			Rotate int `json:"rotate"`
-		} `json:"dimension"`
-		NoCache bool `json:"no_cache"`
-		Pages   []struct {
-			Cid       int    `json:"cid"`
-			Page      int    `json:"page"`
-			From      string `json:"from"`
-			Part      string `json:"part"`
-			Duration  int    `json:"duration"`
-			Vid       string `json:"vid"`
-			Weblink   string `json:"weblink"`
-			Dimension struct {
-				Width  int `json:"width"`
-				Height int `json:"height"`
-				Rotate int `json:"rotate"`
-			} `json:"dimension"`
-		} `json:"pages"`
-		Subtitle struct {
-			AllowSubmit bool          `json:"allow_submit"`
-			List        []interface{} `json:"list"`
-		} `json:"subtitle"`
-	} `json:"data"`
-}
-
-//View 获取视频详情
+// View 获取视频详情
 func (w WebInterface) View(id string) (*ViewResponse, error) {
-	var response ViewResponse
+	var response webType.WebResponse[ViewResponse]
+	url := "http://api.bilibili.com/x/web-interface/view"
 	key := ""
 	switch strings.ToLower(id[:2]) {
 	case "bv":
@@ -105,10 +27,88 @@ func (w WebInterface) View(id string) (*ViewResponse, error) {
 	default:
 		key = "aid"
 	}
-	body, _, err := request.Get(fmt.Sprintf("/x/web-interface/view?%s=%s", key, id))
+	resp, err := w.Req.R().SetQueryParams(map[string]string{key: id}).Get(url)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(body, &response)
-	return &response, err
+	err = json.Unmarshal(resp.Body(), &response)
+	return &response.Data, err
+}
+
+func (w WebInterface) Card(mid string) (*CardResponse, error) {
+	url := "http://api.bilibili.com/x/web-interface/card"
+	resp, err := w.Req.R().
+		SetQueryParams(map[string]string{"mid": mid, "photo": "false"}).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+	var data webType.WebResponse[CardResponse]
+	err = json.Unmarshal(resp.Body(), &data)
+	return &data.Data, err
+}
+
+func (w WebInterface) ArchiveStat(bvid string, aid int) (*ArchiveStatResponse, error) {
+	url := "http://api.bilibili.com/x/web-interface/archive/stat"
+	client := resty.New()
+	params := map[string]string{}
+	if aid != 0 {
+		params["aid"] = fmt.Sprintf("%v", aid)
+	} else {
+		params["bvid"] = bvid
+	}
+	resp, err := client.R().
+		SetQueryParams(params).
+		Get(url)
+	if err != nil {
+		return nil, err
+	}
+	var data webType.WebResponse[ArchiveStatResponse]
+	err = json.Unmarshal(resp.Body(), &data)
+	return &data.Data, err
+}
+
+func (w WebInterface) Online() (*OnlineResponse, error) {
+	url := "http://api.bilibili.com/x/web-interface/online"
+	resp, err := w.Req.R().Get(url)
+	if err != nil {
+		return nil, err
+	}
+	var data webType.WebResponse[OnlineResponse]
+	err = json.Unmarshal(resp.Body(), &data)
+	return &data.Data, err
+}
+
+func (w WebInterface) DynamicRegion(rid string, page int, pagesize int) (*DynamicRegionResponse, error) {
+	url := "http://api.bilibili.com/x/web-interface/dynamic/region"
+	params := map[string]string{"rid": rid}
+	if page == 0 {
+		params["pn"] = "1"
+	} else {
+		params["pn"] = fmt.Sprintf("%v", page)
+	}
+	if pagesize == 0 {
+		params["ps"] = "5"
+	} else {
+		params["ps"] = fmt.Sprintf("%v", pagesize)
+	}
+	resp, err := w.Req.R().Get(url)
+	if err != nil {
+		return nil, err
+	}
+	var data webType.WebResponse[DynamicRegionResponse]
+	err = json.Unmarshal(resp.Body(), &data)
+	return &data.Data, err
+}
+
+func (w WebInterface) NewList(rid string, pagesize, page int) (*NewListResponse, error) {
+	url := "https://api.bilibili.com/x/web-interface/newlist"
+	params := map[string]string{"rid": rid, "type": "0", "ps": fmt.Sprintf("%v", pagesize), "pn": fmt.Sprintf("%v", page)}
+	resp, err := w.Req.R().SetQueryParams(params).Get(url)
+	if err != nil {
+		return nil, err
+	}
+	var data webType.WebResponse[NewListResponse]
+	err = json.Unmarshal(resp.Body(), &data)
+	return &data.Data, err
 }

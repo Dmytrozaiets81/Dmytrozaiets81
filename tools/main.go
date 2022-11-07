@@ -2,9 +2,10 @@ package tools
 
 import (
 	"fmt"
-	"github.com/wnstar/bili-utils/core"
 	"hash/crc32"
 	"strconv"
+
+	"github.com/wnstar/bili-utils/core"
 )
 
 type Tools struct {
@@ -16,11 +17,7 @@ func (t Tools) Bv2av(bv string) string {
 	if err != nil {
 		return ""
 	}
-	if resp.Code == 0 {
-		return fmt.Sprintf("av%d", resp.Data.Aid)
-	} else {
-		return ""
-	}
+	return fmt.Sprintf("av%d", resp.Aid)
 }
 
 func (t Tools) Av2bv(av string) string {
@@ -28,11 +25,7 @@ func (t Tools) Av2bv(av string) string {
 	if err != nil {
 		return ""
 	}
-	if resp.Code == 0 {
-		return resp.Data.Bvid
-	} else {
-		return ""
-	}
+	return resp.Bvid
 }
 
 func (t Tools) DmMidHash2Uid(midHash string) int64 {
