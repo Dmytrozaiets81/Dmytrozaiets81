@@ -35,5 +35,5 @@ func (t Tools) DmMidHash2Uid(midHash string) int64 {
 		s := crc32.ChecksumIEEE([]byte(strconv.FormatInt(i, 10)))
 		hashid = strconv.FormatInt(int64(s), 16)
 	}
-	return i
+	return i - 1
 }
